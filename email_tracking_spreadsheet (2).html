@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Handling & Accountability Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 100%;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+        
+        .btn-export {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+        }
+        
+        .btn-export:hover {
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            max-height: 70vh;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        th {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+        
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #e3f2fd;
+            transition: background-color 0.2s ease;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 12px;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2196F3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .priority-high { background-color: #ffebee !important; }
+        .priority-medium { background-color: #fff8e1 !important; }
+        .priority-low { background-color: #e8f5e8 !important; }
+        
+        .status-open { color: #f44336; font-weight: bold; }
+        .status-in-progress { color: #ff9800; font-weight: bold; }
+        .status-resolved { color: #4caf50; font-weight: bold; }
+        
+        .sla-met { color: #4caf50; font-weight: bold; }
+        .sla-missed { color: #f44336; font-weight: bold; }
+        
+        .delete-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+        
+        .stats {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .team-performance {
+            padding: 20px 30px;
+            background: #f1f3f4;
+        }
+        
+        .team-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .team-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #2196F3;
+        }
+        
+        .team-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2196F3;
+            margin-bottom: 15px;
+        }
+        
+        .team-metric {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .team-metric:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .metric-value {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .metric-good { color: #4caf50; }
+        .metric-warning { color: #ff9800; }
+        .metric-danger { color: #f44336; }
+        
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8rem; }
+            .controls { flex-direction: column; align-items: stretch; }
+            .btn { width: 100%; }
+            table { font-size: 12px; }
+            th, td { padding: 8px 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 Email Handling & Accountability Tracker</h1>
+            <p>Track, manage, and analyze team email response performance</p>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="addRow()">+ Add New Email Entry</button>
+            <button class="btn btn-export" onclick="exportToCSV()">📊 Export to CSV</button>
+            <button class="btn" onclick="updateStats()">🔄 Refresh Stats</button>
+        </div>
+        
+        <div class="table-container">
+            <table id="emailTable">
+                <thead>
+                    <tr>
+                        <th>Entry Date</th>
+                        <th>Email Received Date</th>
+                        <th>Time Received</th>
+                        <th>From</th>
+                        <th>Mailbox Source</th>
+                        <th>Email Subject</th>
+                        <th>Brief Description</th>
+                        <th>Priority</th>
+                        <th>Category</th>
+                        <th>Assigned To</th>
+                        <th>Status</th>
+                        <th>Resolution Date</th>
+                        <th>Resolution Time</th>
+                        <th>Response Time (Hours)</th>
+                        <th>SLA Met (24hrs)?</th>
+                        <th>Escalated?</th>
+                        <th>Escalated To</th>
+                        <th>Resolution Summary</th>
+                        <th>Resolved Email Folder</th>
+                        <th>Customer Satisfaction</th>
+                        <th>Follow-up Required?</th>
+                        <th>Notes</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="emailTableBody">
+                    <!-- Sample rows will be added here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalEmails">0</div>
+                <div class="stat-label">Total Emails</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="slaCompliance">0%</div>
+                <div class="stat-label">SLA Compliance</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avgResponseTime">0</div>
+                <div class="stat-label">Avg Response Time (hrs)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="openEmails">0</div>
+                <div class="stat-label">Open Emails</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="highPriorityOpen">0</div>
+                <div class="stat-label">High Priority Open</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avgSatisfaction">0</div>
+                <div class="stat-label">Avg Customer Rating</div>
+            </div>
+        </div>
+        
+        <div class="team-performance">
+            <h3 style="text-align: center; margin: 20px 0; color: #34495e;">Team Performance Summary</h3>
+            <div class="team-stats" id="teamStats">
+                <!-- Team performance cards will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let emailData = [];
+        let rowCounter = 0;
+
+        function addRow() {
+            const tableBody = document.getElementById('emailTableBody');
+            const row = document.createElement('tr');
+            const currentDate = new Date().toISOString().split('T')[0];
+            const currentTime = new Date().toTimeString().split(' ')[0].substring(0, 5);
+            
+            row.innerHTML = `
+                <td><input type="date" value="${currentDate}" onchange="updateData(this)"></td>
+                <td><input type="date" onchange="updateData(this)"></td>
+                <td><input type="time" onchange="updateData(this)"></td>
+                <td><input type="text" placeholder="sender@email.com" onchange="updateData(this)"></td>
+                <td><select onchange="updateData(this)">
+                    <option value="">Select Mailbox</option>
+                    <option value="Teaching English Online">Teaching English Online</option>
+                    <option value="English Online Operations">English Online Operations</option>
+                </select></td>
+                <td><input type="text" placeholder="Email subject line" onchange="updateData(this)"></td>
+                <td><textarea placeholder="Brief description of the email content" onchange="updateData(this)"></textarea></td>
+                <td><select onchange="updateData(this); updateRowStyle(this)">
+                    <option value="">Select Priority</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select></td>
+                <td><select onchange="updateData(this)">
+                    <option value="">Select Category</option>
+                    <option value="Technical Support">Technical Support</option>
+                    <option value="Billing">Billing</option>
+                    <option value="General Inquiry">General Inquiry</option>
+                    <option value="Complaint">Complaint</option>
+                    <option value="Feature Request">Feature Request</option>
+                    <option value="Other">Other</option>
+                </select></td>
+                <td><select onchange="updateData(this)">
+                    <option value="">Select Team Member</option>
+                    <option value="Kaushik Swati">Kaushik Swati</option>
+                    <option value="Maria Donna">Maria Donna</option>
+                    <option value="Robert Otieno">Robert Otieno</option>
+                    <option value="James Wilson Bukowski">James Wilson Bukowski</option>
+                    <option value="Gautam Shikha">Gautam Shikha</option>
+                    <option value="Gautam Sanjini">Gautam Sanjini</option>
+                    <option value="Bhardwaj Priyanka">Bhardwaj Priyanka</option>
+                    <option value="Ajith Mabubhani">Ajith Mabubhani</option>
+                    <option value="Dam Priya">Dam Priya</option>
+                    <option value="Das Deep">Das Deep</option>
+                </select></td>
+                <td><select onchange="updateData(this); updateRowStyle(this)">
+                    <option value="Open">Open</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Closed">Closed</option>
+                </select></td>
+                <td><input type="date" onchange="updateData(this); calculateResponseTime(this)"></td>
+                <td><input type="time" onchange="updateData(this); calculateResponseTime(this)"></td>
+                <td><input type="number" step="0.1" placeholder="Auto-calculated" readonly></td>
+                <td><select onchange="updateData(this); updateRowStyle(this)">
+                    <option value="">-</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select></td>
+                <td><select onchange="updateData(this)">
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                </select></td>
+                <td><select onchange="updateData(this)">
+                    <option value="">If escalated, to whom?</option>
+                    <option value="Kaushik Swati">Kaushik Swati</option>
+                    <option value="Maria Donna">Maria Donna</option>
+                    <option value="Robert Otieno">Robert Otieno</option>
+                    <option value="James Wilson Bukowski">James Wilson Bukowski</option>
+                    <option value="Gautam Shikha">Gautam Shikha</option>
+                    <option value="Gautam Sanjini">Gautam Sanjini</option>
+                    <option value="Bhardwaj Priyanka">Bhardwaj Priyanka</option>
+                    <option value="Ajith Mabubhani">Ajith Mabubhani</option>
+                    <option value="Dam Priya">Dam Priya</option>
+                    <option value="Das Deep">Das Deep</option>
+                    <option value="External Manager">External Manager</option>
+                    <option value="Other Department">Other Department</option>
+                </select></td>
+                <td><textarea placeholder="How was the issue resolved?" onchange="updateData(this)"></textarea></td>
+                <td><input type="text" placeholder="Enter folder path/name where email was moved" onchange="updateData(this)"></td>
+                <td><select onchange="updateData(this)">
+                    <option value="">Not Rated</option>
+                    <option value="5 - Excellent">5 - Excellent</option>
+                    <option value="4 - Good">4 - Good</option>
+                    <option value="3 - Average">3 - Average</option>
+                    <option value="2 - Poor">2 - Poor</option>
+                    <option value="1 - Very Poor">1 - Very Poor</option>
+                </select></td>
+                <td><select onchange="updateData(this)">
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                </select></td>
+                <td><textarea placeholder="Additional notes or comments" onchange="updateData(this)"></textarea></td>
+                <td><button class="delete-btn" onclick="deleteRow(this)">Delete</button></td>
+            `;
+            
+            tableBody.appendChild(row);
+            rowCounter++;
+            updateStats();
+        }
+
+        function deleteRow(button) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                button.closest('tr').remove();
+                updateStats();
+            }
+        }
+
+        function updateData(element) {
+            updateStats();
+        }
+
+        function updateRowStyle(element) {
+            const row = element.closest('tr');
+            const priority = row.querySelector('select').value;
+            const status = row.querySelectorAll('select')[2].value;
+            const sla = row.querySelectorAll('select')[4].value;
+            
+            // Remove existing classes
+            row.classList.remove('priority-high', 'priority-medium', 'priority-low');
+            
+            // Add priority class
+            if (priority === 'High') row.classList.add('priority-high');
+            else if (priority === 'Medium') row.classList.add('priority-medium');
+            else if (priority === 'Low') row.classList.add('priority-low');
+            
+            // Update status styling
+            const statusCell = row.querySelectorAll('td')[8];
+            statusCell.className = '';
+            if (status === 'Open') statusCell.classList.add('status-open');
+            else if (status === 'In Progress') statusCell.classList.add('status-in-progress');
+            else if (status === 'Resolved' || status === 'Closed') statusCell.classList.add('status-resolved');
+            
+            // Update SLA styling
+            const slaCell = row.querySelectorAll('td')[12];
+            slaCell.className = '';
+            if (sla === 'Yes') slaCell.classList.add('sla-met');
+            else if (sla === 'No') slaCell.classList.add('sla-missed');
+        }
+
+        function calculateResponseTime(element) {
+            const row = element.closest('tr');
+            const receivedDate = row.querySelectorAll('input[type="date"]')[1].value;
+            const receivedTime = row.querySelectorAll('input[type="time"]')[0].value;
+            const resolvedDate = row.querySelectorAll('input[type="date"]')[2].value;
+            const resolvedTime = row.querySelectorAll('input[type="time"]')[1].value;
+            
+            if (receivedDate && receivedTime && resolvedDate && resolvedTime) {
+                const received = new Date(`${receivedDate}T${receivedTime}`);
+                const resolved = new Date(`${resolvedDate}T${resolvedTime}`);
+                const diffHours = (resolved - received) / (1000 * 60 * 60);
+                
+                row.querySelectorAll('input[type="number"]')[0].value = diffHours.toFixed(1);
+                
+                // Auto-update SLA status
+                const slaSelect = row.querySelectorAll('select')[4];
+                slaSelect.value = diffHours <= 24 ? 'Yes' : 'No';
+                updateRowStyle(slaSelect);
+            }
+        }
+
+        function updateStats() {
+            const rows = document.querySelectorAll('#emailTableBody tr');
+            const totalEmails = rows.length;
+            let slaMetCount = 0;
+            let totalResponseTime = 0;
+            let responseTimeCount = 0;
+            let openEmails = 0;
+            let highPriorityOpen = 0;
+            let totalSatisfaction = 0;
+            let satisfactionCount = 0;
+            
+            // Team performance tracking
+            const teamMembers = ['Kaushik Swati', 'Maria Donna', 'Robert Otieno', 'James Wilson Bukowski', 
+                                'Gautam Shikha', 'Gautam Sanjini', 'Bhardwaj Priyanka', 'Ajith Mabubhani', 
+                                'Dam Priya', 'Das Deep'];
+            const teamStats = {};
+            
+            teamMembers.forEach(member => {
+                teamStats[member] = {
+                    total: 0,
+                    resolved: 0,
+                    open: 0,
+                    slasMet: 0,
+                    avgResponseTime: 0,
+                    totalResponseTime: 0,
+                    responseTimeCount: 0,
+                    avgSatisfaction: 0,
+                    totalSatisfaction: 0,
+                    satisfactionCount: 0,
+                    highPriority: 0
+                };
+            });
+            
+            rows.forEach(row => {
+                const sla = row.querySelectorAll('select')[4].value;
+                const status = row.querySelectorAll('select')[2].value;
+                const priority = row.querySelectorAll('select')[0].value;
+                const assignedTo = row.querySelectorAll('select')[1].value;
+                const satisfaction = row.querySelectorAll('select')[6].value;
+                const responseTime = parseFloat(row.querySelector('input[type="number"]').value);
+                
+                // Overall stats
+                if (sla === 'Yes') slaMetCount++;
+                if (status === 'Open') {
+                    openEmails++;
+                    if (priority === 'High') highPriorityOpen++;
+                }
+                if (!isNaN(responseTime)) {
+                    totalResponseTime += responseTime;
+                    responseTimeCount++;
+                }
+                if (satisfaction && satisfaction !== 'Not Rated') {
+                    const rating = parseInt(satisfaction.charAt(0));
+                    totalSatisfaction += rating;
+                    satisfactionCount++;
+                }
+                
+                // Team member stats
+                if (assignedTo && teamStats[assignedTo]) {
+                    teamStats[assignedTo].total++;
+                    if (status === 'Resolved' || status === 'Closed') {
+                        teamStats[assignedTo].resolved++;
+                    } else if (status === 'Open') {
+                        teamStats[assignedTo].open++;
+                    }
+                    if (sla === 'Yes') teamStats[assignedTo].slasMet++;
+                    if (priority === 'High') teamStats[assignedTo].highPriority++;
+                    
+                    if (!isNaN(responseTime)) {
+                        teamStats[assignedTo].totalResponseTime += responseTime;
+                        teamStats[assignedTo].responseTimeCount++;
+                    }
+                    if (satisfaction && satisfaction !== 'Not Rated') {
+                        const rating = parseInt(satisfaction.charAt(0));
+                        teamStats[assignedTo].totalSatisfaction += rating;
+                        teamStats[assignedTo].satisfactionCount++;
+                    }
+                }
+            });
+            
+            // Calculate averages for team members
+            Object.keys(teamStats).forEach(member => {
+                const stats = teamStats[member];
+                stats.avgResponseTime = stats.responseTimeCount > 0 ? 
+                    (stats.totalResponseTime / stats.responseTimeCount).toFixed(1) : 0;
+                stats.avgSatisfaction = stats.satisfactionCount > 0 ? 
+                    (stats.totalSatisfaction / stats.satisfactionCount).toFixed(1) : 0;
+            });
+            
+            // Update main stats
+            document.getElementById('totalEmails').textContent = totalEmails;
+            document.getElementById('slaCompliance').textContent = totalEmails > 0 ? Math.round((slaMetCount / totalEmails) * 100) + '%' : '0%';
+            document.getElementById('avgResponseTime').textContent = responseTimeCount > 0 ? (totalResponseTime / responseTimeCount).toFixed(1) : '0';
+            document.getElementById('openEmails').textContent = openEmails;
+            document.getElementById('highPriorityOpen').textContent = highPriorityOpen;
+            document.getElementById('avgSatisfaction').textContent = satisfactionCount > 0 ? (totalSatisfaction / satisfactionCount).toFixed(1) : '0';
+            
+            // Update team performance display
+            updateTeamPerformance(teamStats);
+        }
+
+        function updateTeamPerformance(teamStats) {
+            const teamStatsContainer = document.getElementById('teamStats');
+            teamStatsContainer.innerHTML = '';
+            
+            Object.keys(teamStats).forEach(member => {
+                const stats = teamStats[member];
+                if (stats.total === 0) return; // Skip members with no assignments
+                
+                const slaPercentage = stats.total > 0 ? Math.round((stats.slasMet / stats.total) * 100) : 0;
+                const resolvedPercentage = stats.total > 0 ? Math.round((stats.resolved / stats.total) * 100) : 0;
+                
+                const teamCard = document.createElement('div');
+                teamCard.className = 'team-card';
+                teamCard.innerHTML = `
+                    <div class="team-name">${member}</div>
+                    <div class="team-metric">
+                        <span class="metric-label">Total Emails:</span>
+                        <span class="metric-value">${stats.total}</span>
+                    </div>
+                    <div class="team-metric">
+                        <span class="metric-label">Resolved:</span>
+                        <span class="metric-value ${resolvedPercentage >= 80 ? 'metric-good' : resolvedPercentage >= 60 ? 'metric-warning' : 'metric-danger'}">${stats.resolved} (${resolvedPercentage}%)</span>
+                    </div>
+                    <div class="team-metric">
+                        <span class="metric-label">Open:</span>
+                        <span class="metric-value ${stats.open <= 2 ? 'metric-good' : stats.open <= 5 ? 'metric-warning' : 'metric-danger'}">${stats.open}</span>
+                    </div>
+                    <div class="team-metric">
+                        <span class="metric-label">SLA Compliance:</span>
+                        <span class="metric-value ${slaPercentage >= 90 ? 'metric-good' : slaPercentage >= 75 ? 'metric-warning' : 'metric-danger'}">${slaPercentage}%</span>
+                    </div>
+                    <div class="team-metric">
+                        <span class="metric-label">Avg Response Time:</span>
+                        <span class="metric-value ${stats.avgResponseTime <= 12 ? 'metric-good' : stats.avgResponseTime <= 20 ? 'metric-warning' : 'metric-danger'}">${stats.avgResponseTime}h</span>
+                    </div>
+                    <div class="team-metric">
+                        <span class="metric-label">Avg Rating:</span>
+                        <span class="metric-value ${stats.avgSatisfaction >= 4 ? 'metric-good' : stats.avgSatisfaction >= 3 ? 'metric-warning' : stats.avgSatisfaction > 0 ? 'metric-danger' : ''}">${stats.avgSatisfaction > 0 ? stats.avgSatisfaction + '/5' : 'N/A'}</span>
+                    </div>
+                    <div class="team-metric">
+                        <span class="metric-label">High Priority:</span>
+                        <span class="metric-value ${stats.highPriority <= 1 ? 'metric-good' : stats.highPriority <= 3 ? 'metric-warning' : 'metric-danger'}">${stats.highPriority}</span>
+                    </div>
+                `;
+                teamStatsContainer.appendChild(teamCard);
+            });
+        }
+
+        function exportToCSV() {
+            const table = document.getElementById('emailTable');
+            const rows = table.querySelectorAll('tr');
+            let csvContent = '';
+            
+            // Headers
+            const headers = Array.from(rows[0].querySelectorAll('th')).map(th => th.textContent.trim());
+            csvContent += headers.slice(0, -1).join(',') + '\n'; // Exclude Action column
+            
+            // Data rows
+            rows.forEach((row, index) => {
+                if (index === 0) return; // Skip header row
+                
+                const cells = Array.from(row.querySelectorAll('td')).slice(0, -1); // Exclude Action column
+                const rowData = cells.map(cell => {
+                    const input = cell.querySelector('input, select, textarea');
+                    return input ? `"${input.value.replace(/"/g, '""')}"` : '""';
+                });
+                csvContent += rowData.join(',') + '\n';
+            });
+            
+            // Download CSV
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `email_tracker_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Initialize with sample data
+        document.addEventListener('DOMContentLoaded', function() {
+            addRow(); // Add one empty row to start
+            updateStats();
+        });
+    </script>
+</body>
+</html>
